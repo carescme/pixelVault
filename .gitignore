@@ -1,0 +1,90 @@
+# ==========================================
+# 1. Entorno Virtual y Dependencias de Python
+# ==========================================
+.venv/
+venv/
+env/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ==========================================
+# 2. Archivos Secretos y Configuración (.env)
+# ==========================================
+# ¡NUNCA subas estos archivos! Contienen tus contraseñas de Postgres
+.env
+.env.local
+.env.*.local
+.db_password
+
+# ==========================================
+# 3. Caché de Python y Compilación
+# ==========================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ==========================================
+# 4. Entorno de Desarrollo (VS Code / JetBrains)
+# ==========================================
+.vscode/
+# Si quieres compartir la configuración de extensiones recomendadas de VS Code,
+# puedes desmarcar la siguiente línea:
+# !.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# ==========================================
+# 5. Archivos del Sistema Operativo
+# ==========================================
+# Windows
+Thumbs.db
+Ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ==========================================
+# 6. PostgreSQL / Bases de datos locales
+# ==========================================
+# En caso de que hagas respaldos locales de tu BD (.sql o .dump) 
+# o uses SQLite temporal para pruebas, Git los ignorará para no pesar de más.
+*.sql
+*.dump
+*.tar
+*.db
+*.sqlite3
+
+# Log de la base de datos o de la aplicación
+*.log
