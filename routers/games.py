@@ -1,17 +1,13 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
-from database import engine
+from database import get_session
 from models import Videojuego
 
 router = APIRouter(
     prefix="/videojuegos",
     tags=["Videojuegos"]
 )
-
-def get_session():
-    with Session(engine) as session:
-        yield session
 
 # ENDPOINTS
 
@@ -28,10 +24,7 @@ def carga_masiva_videojuegos(juegos_nuevos: List[Videojuego], session: Session =
     en un único bloque de transacción.
     """
     if not juegos_nuevos:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="La lista de videojuegos no puede estar vacía."
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La lista de videojuegos no puede estar vacía.")
     try:
         session.add_all(juegos_nuevos)
         session.commit()
@@ -42,7 +35,4 @@ def carga_masiva_videojuegos(juegos_nuevos: List[Videojuego], session: Session =
         }
     except Exception as e:
         session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno al realizar la carga masiva: {str(e)}."
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error interno al realizar la carga masiva: {str(e)}.")

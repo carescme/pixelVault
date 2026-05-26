@@ -26,3 +26,10 @@ class Videojuego(SQLModel, table=True):
     desarrollador: str
 
     usuarios: List[Usuario] = Relationship(back_populates="videojuegos", link_model=Biblioteca)
+
+class UsuarioPublico(SQLModel):
+    id: int
+    username: str
+    email: str
+    saldo_cartera: float
+    videojuegos: List[Videojuego] = []
