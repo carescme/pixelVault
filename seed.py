@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from sqlmodel import Session, select
 from database import engine
 from models import Videojuego, Usuario
+from security import hashing_password
 
 def poblar_db():
     print("Iniciando semillado de datos...")
@@ -37,13 +38,13 @@ def poblar_db():
         usuario1 = Usuario(
             username="gamer_pro",
             email="pro@pixelvault.com",
-            hashed_password="clave_falsa_segura_1", # En la Fase de seguridad usaremos bcrypt/passlib
+            hashed_password=hashing_password("12345"),
             saldo_cartera=100.00
         )
         usuario2 = Usuario(
             username="casual_player",
             email="casual@pixelvault.com",
-            hashed_password="clave_falsa_segura_2",
+            hashed_password=hashing_password("P@ssw0rd_Secreta"),
             saldo_cartera=20.00
         )
 

@@ -33,3 +33,15 @@ class UsuarioPublico(SQLModel):
     email: str
     saldo_cartera: float
     videojuegos: List[Videojuego] = []
+
+class UsuarioCreate(SQLModel):
+    username: str
+    email: str
+    password: str
+
+class VideojuegoConHoras(SQLModel):
+    titulo: str
+    descripcion: str
+    precio: float
+    desarrollador: str
+    horas_jugadas: float

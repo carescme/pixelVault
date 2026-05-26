@@ -10,13 +10,38 @@ router = APIRouter(
 )
 
 # ENDPOINTS
-
+#GET
 @router.get("/", response_model=List[Videojuego])
 def listar_videojuegos(session: Session = Depends(get_session)):
     """Trae todos los videojuegos en la plataforma."""
     juegos = session.exec(select(Videojuego)).all()
     return juegos
 
+@router.get("/buscar", response_model=List[Videojuego])
+def buscar_titulo(titulo: str, session: Session = Depends(get_session)):
+    """Busca videojuegos cuyo título contenga el texto enviado."""
+    statement = select(Videojuego).where(Videojuego.titulo.ilike(f"%{titulo}%"))
+    juegos = session.exec(statement).all()
+    return juegos
+
+@router.get("/desarrollador/{desarrollador_nombre}", response_model=List[Videojuego])
+def filtrar_desarrollador(desarrollador_nombre: str, session: Session = Depends(get_session)):
+    """Trae todos los videojuegos creados por un desarrollador específico."""
+    statement = select(Videojuego).where(Videojuego.desarrollador.ilike(f"%{desarrollador_nombre}%"))
+    juegos = session.exec(statement).all()
+    return juegos
+
+@router.get("/precio-max", response_model=List[Videojuego])
+def filtrar_precio_max(precio: float, session: Session = Depends(get_session)):
+    """Trae los videojuegos del catálogo que cuesten igual o menos que el precio determinado."""
+    if precio < 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El precio no puedes ser inferior a 0.")
+    
+    statement = select(Videojuego).where(Videojuego.precio <= precio)
+    juegos = session.exec(statement).all()
+    return juegos
+
+#POST
 @router.post("/bulk", status_code=status.HTTP_201_CREATED)
 def carga_masiva_videojuegos(juegos_nuevos: List[Videojuego], session: Session = Depends(get_session)):
     """
@@ -36,3 +61,22 @@ def carga_masiva_videojuegos(juegos_nuevos: List[Videojuego], session: Session =
     except Exception as e:
         session.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error interno al realizar la carga masiva: {str(e)}.")
+    
+@router.post("/", response_model=Videojuego, status_code=status.HTTP_201_CREATED)
+def crear_videojuego(juego_in: Videojuego, session: Session = Depends(get_session)):
+    """Añade un nuevo videojuego de forma individual al catálogo general."""
+    session.add(juego_in)
+    session.commit()
+    session.refresh(juego_in)
+    return juego_in
+
+# DELETE
+@router.delete("/{videojuego_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_videojuego(videojuego_id: int, session: Session = Depends(get_session)):
+    """Elimina un videojuego del catálogo del sistema."""
+    juego = session.get(Videojuego, videojuego_id)
+    if not juego:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="El juego que se intenta borrar no existe.")
+    session.delete(juego)
+    session.commit()
+    return None
