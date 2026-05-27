@@ -9,11 +9,13 @@ Desarrollado con **Python**, **FastAPI**, **SQLModel** (SQLAlchemy) y **PostgreS
 ## 🚀 Características Clave
 
 - **Arquitectura Modular:** Rutas organizadas limpiamente mediante `APIRouter` separando las responsabilidades de usuarios y videojuegos.
-- **Relación Muchos a Muchos (Many-to-Many):** Implementación nativa de la tabla intermedia `Biblioteca` para conectar usuarios y videojuegos, registrando metadatos adicionales (horas jugadas y fechas de adquisición).
-- **Rendimiento Optimizado (Bulk Insert):** Endpoint diseñado para realizar inyecciones masivas de videojuegos en una única transacción de red.
-- **Seguridad y Hashing:** Registro de usuarios con encriptación de contraseñas en tiempo real mediante el algoritmo **Bcrypt**.
-- **Validación Transaccional:** Control estricto de lógica de negocio (verificación de saldo suficiente, prevención de juegos duplicados en la biblioteca y confirmación de identidad mediante contraseña para operaciones críticas).
-- **Esquemas de Lectura Protectores:** Uso avanzado de Pydantic/SQLModel para estructurar las respuestas de la API, ocultando datos sensibles (como contraseñas hasheadas) y resolviendo la carga de relaciones mediante `selectinload`.
+- **Autenticación Descentralizada (JWT):** Implementación de tokens de acceso eficientes y seguros mediante el algoritmo **HS256**. El servidor valida identidades matemáticamente sin almacenar sesiones en memoria.
+- **Control de Accesos Basado en Roles (RBAC):** Sistema factoría centralizado para restringir endpoints críticos. Por ejemplo, la creación e inyección masiva de catálogo está reservada exclusivamente para roles autorizados (`admin`, `dev`).
+- **Seguridad a Nivel de Fila (Implicit Ownership):** Eliminación completa de manipulación de IDs de usuario por la URL. Las operaciones financieras o de juego extraen el ID de forma oculta y segura desde el Token criptográfico.
+- **Libro de Contabilidad e Historial Financiero:** Tabla de auditoría integrada (`Transacciones`) que registra cronológicamente cada ingreso de saldo o compra con marcas de tiempo UTC perfectas.
+- **Relación Muchos a Muchos (Many-to-Many):** Implementación de la tabla intermedia `Biblioteca` para conectar usuarios y videojuegos, permitiendo acumular metadatos dinámicos (horas jugadas).
+- **Ciclo de Vida de Datos (Soft Delete):** Preservación estricta de la integridad referencial y el histórico de compras. Los videojuegos o usuarios dados de baja pasan a estado inactivo (`activo = False`), desapareciendo del flujo público sin destruir registros en la base de datos.
+- **Rendimiento Optimizado (Bulk Insert):** Endpoint administrativo diseñado para inyectar un catálogo masivo de videojuegos en una única transacción de base de datos.
 
 ---
 
@@ -24,6 +26,8 @@ Desarrollado con **Python**, **FastAPI**, **SQLModel** (SQLAlchemy) y **PostgreS
 - **SQLModel:** ORM moderno que fusiona la potencia de SQLAlchemy con la validación de Pydantic.
 - **PostgreSQL:** Sistema de gestión de bases de datos relacionales.
 - **Bcrypt:** Librería para el hashing seguro de contraseñas.
+- **PyJWT:** Generación y decodificación de JSON Web Tokens para la seguridad.
+- **Python-Multipart:** Procesamiento de datos de formulario web para sincronización nativa con la UI de Swagger.
 - **Pydantic v2:** Validación de datos y gestión de configuraciones mediante variables de entorno (`.env`).
 
 ---
@@ -85,6 +89,9 @@ Crea un archivo llamado `.env` en la raíz del proyecto y configura tus credenci
 
 ```env
 DATABASE_URL=postgresql://tu_usuario:tu_contraseña@localhost:5432/pixelvault_db
+JWT_SECRET=tu_clave_secreta_segura_de_64_caracteres_hexadecimales
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
 
 ### 5. Semillado de la Base de Datos (Opcional)

@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from database import get_session
 from models import Videojuego
+from security import ExigirRol
 
 router = APIRouter(
     prefix="/videojuegos",
@@ -12,9 +13,16 @@ router = APIRouter(
 # ENDPOINTS
 #GET
 @router.get("/", response_model=List[Videojuego])
-def listar_videojuegos(session: Session = Depends(get_session)):
+def listar_videojuegos(offset: int = 0, limit: int = 5, session: Session = Depends(get_session)):
     """Trae todos los videojuegos en la plataforma."""
-    juegos = session.exec(select(Videojuego)).all()
+    statement = (
+        select(Videojuego)
+        .where(Videojuego.activo == True)
+        .offset(offset)
+        .limit(limit)
+    )
+    
+    juegos = session.exec(statement).all()
     return juegos
 
 @router.get("/buscar", response_model=List[Videojuego])
@@ -43,10 +51,10 @@ def filtrar_precio_max(precio: float, session: Session = Depends(get_session)):
 
 #POST
 @router.post("/bulk", status_code=status.HTTP_201_CREATED)
-def carga_masiva_videojuegos(juegos_nuevos: List[Videojuego], session: Session = Depends(get_session)):
+def carga_masiva_videojuegos(juegos_nuevos: List[Videojuego], session: Session = Depends(get_session), admin_actual: dict = Depends(ExigirRol(["admin"]))):
     """
     Recibe una lista de videojuegos y los inserta de forma optimizada
-    en un único bloque de transacción.
+    en un único bloque de transacción. Solo pueden hacerlo los administradores.
     """
     if not juegos_nuevos:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La lista de videojuegos no puede estar vacía.")
@@ -72,11 +80,22 @@ def crear_videojuego(juego_in: Videojuego, session: Session = Depends(get_sessio
 
 # DELETE
 @router.delete("/{videojuego_id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_videojuego(videojuego_id: int, session: Session = Depends(get_session)):
-    """Elimina un videojuego del catálogo del sistema."""
+def eliminar_videojuego(videojuego_id: int, session: Session = Depends(get_session), admin_actual: dict = Depends(ExigirRol(["admin"]))):
+    """
+    Realiza el borrado lógico de un videojuego.
+    El juego sigue en la base de datos para no romper el historial de compras, 
+    pero desaparece del catálogo público de la tienda.
+    """
     juego = session.get(Videojuego, videojuego_id)
     if not juego:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="El juego que se intenta borrar no existe.")
-    session.delete(juego)
+    if not juego.activo:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El videojuego ya estaba eliminado.")
+    
+    juego.activo = False
+    session.add(juego)
     session.commit()
-    return None
+    return {
+        "status": "success",
+        "message": f"El videojuego '{juego.titulo}' ha sido retidado del catálogo."
+    }
